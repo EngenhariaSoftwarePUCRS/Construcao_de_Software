@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  csw24-grupob
+
+  Sample SAM Template for csw24-grupob
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 3
+      CodeUri: ../src
+      Handler: main.lambdaHello
+      Runtime: nodejs18.x
+      Role: arn:aws:iam::055848354853:role/LabRole
+      Architectures:
+        - x86_64
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: 
+          - main.ts
+        External:
+          - "@nestjs/microservices"
+          - "@nestjs/websockets"
+          - "class-transformer"
+          - "class-validator"
+
+  TicketsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 15
+      CodeUri: ../src
+      Handler: main.lambdaHandler
+      Runtime: nodejs18.x
+      Role: arn:aws:iam::055848354853:role/LabRole
+      Architectures:
+        - x86_64
+      Events:
+        Tickets:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: 
+          - main.ts
+        External:
+          - "@nestjs/microservices"
+          - "@nestjs/websockets"
+          - "class-transformer"
+          - "class-validator"
+
+Outputs:
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  TicketsFunction:
+    Description: "Tickets Lambda Function ARN"
+    Value: !GetAtt TicketsFunction.Arn
