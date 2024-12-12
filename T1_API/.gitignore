@@ -1,5 +1,7 @@
-# Trabalho Prático (https://github.com/mateuscacabuenaPUCRS/ConstrucaoDeSoftware/tree/main)
-T2_*
+/dist
+/node_modules
+
+.aws/credentials
 
 # AWS Key Pairs
 *.pem
