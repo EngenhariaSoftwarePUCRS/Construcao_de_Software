@@ -1,3 +1,3 @@
-resource "aws_ecr_repository" "grupob_maecia" {
-  name = "grupob_maecia"
+resource "aws_ecr_repository" "ecr" {
+  name = "${local.name}-ecr"
 }

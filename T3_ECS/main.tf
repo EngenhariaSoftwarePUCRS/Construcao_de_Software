@@ -1,18 +1,6 @@
 provider "aws" {
-  region = "us-east-1"
-}
-
-data "aws_availability_zones" "available" {}
-
-locals {
-  name = "ex-${basename(path.cwd)}"
-
-  container_name = "ecsdemo-frontend"
-  container_port = 3000
-
-  tags = {
-    Name       = local.name
-    Example    = local.name
-    Repository = "https://github.com/terraform-aws-modules/terraform-aws-ecs"
-  }
+  region     = local.region
+  access_key = var.AWS_ACCESS_KEY_ID
+  secret_key = var.AWS_SECRET_ACCESS_KEY
+  token      = var.AWS_SESSION_TOKEN
 }

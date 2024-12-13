@@ -1,42 +1,52 @@
-module "ecs" {
-  source = "terraform-aws-modules/ecs/aws"
+resource "aws_ecs_cluster" "ecs_cluster" {
+  name = "${local.name}-ecs-cluster"
+}
 
-  cluster_name = local.name
+resource "aws_ecs_task_definition" "task" {
+  family                   = "${local.name}-ecs-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
 
-  services = {
-    "${local.container_name}" = {
-      cpu    = 1024
-      memory = 4096
+  cpu    = "1024"
+  memory = "2048"
 
-      # Container definition(s)
-      container_definitions = {
-        "${local.container_name}" = {
-          cpu       = 512
-          memory    = 1024
-          essential = true
-          image     = "public.ecr.aws/aws-containers/ecsdemo-frontend:776fd50"
+  container_definitions = jsonencode([{
+    name      = local.container_name
+    cpu       = 512
+    memory    = 1024
+    essential = true
+    image     = "${local.user_id}.dkr.ecr.${local.region}.amazonaws.com/${local.container_name}:latest"
 
-          port_mappings = [
-            {
-              containerPort = local.container_port
-              hostPort      = local.container_port
-              protocol      = "tcp"
-            }
-          ]
-        }
-      }
+    portMappings = [{
+      containerPort = local.container_port
+      hostPort      = local.container_port
+      protocol      = "tcp"
+    }]
+  }])
 
-      subnet_ids = module.vpc.public_subnets
-      # subnet_ids = module.vpc.private_subnets
+  execution_role_arn = "arn:aws:iam::${local.user_id}:role/LabRole"
+  task_role_arn      = "arn:aws:iam::${local.user_id}:role/LabRole"
 
-      load_balancer = {
-        service = {
-          target_group_arn = module.alb.target_groups["ecs"].arn
-          container_name   = local.container_name
-          container_port   = local.container_port
-        }
-      }
-    }
+  tags = local.tags
+}
+
+resource "aws_ecs_service" "ecs_service" {
+  name            = "${local.name}-ecs-service"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.task.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = module.vpc.public_subnets
+    security_groups  = [aws_security_group.security_group.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = module.alb.target_groups["ecs"].arn
+    container_name   = local.container_name
+    container_port   = local.container_port
   }
 
   tags = local.tags

@@ -1,32 +1,20 @@
 module "alb" {
   source = "terraform-aws-modules/alb/aws"
 
-  name = local.name
+  name = "${local.name}-alb"
 
   load_balancer_type = "application"
 
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.public_subnets
 
-  # Security Group
-  security_group_ingress_rules = {
-    all_http = {
-      from_port   = 80
-      to_port     = 80
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
-  security_group_egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = module.vpc.vpc_cidr_block
-    }
-  }
+  security_groups = [aws_security_group.security_group.id]
+
+  enable_deletion_protection = false
 
   listeners = {
-    ex_http = {
-      port     = 80
+    http = {
+      port     = local.container_port
       protocol = "HTTP"
 
       forward = {
